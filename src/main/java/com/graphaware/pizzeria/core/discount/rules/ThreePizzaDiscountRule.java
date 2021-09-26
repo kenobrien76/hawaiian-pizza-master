@@ -1,4 +1,4 @@
-package com.graphaware.pizzeria.core;
+package com.graphaware.pizzeria.core.discount.rules;
 
 import com.graphaware.pizzeria.model.Pizza;
 
@@ -7,16 +7,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class ThreePizzaDiscountRule {
+public class ThreePizzaDiscountRule implements DiscountRule {
 
-    private final List<Pizza> pizzas;
     public static final Double ZERO_DISCOUNT = 0.0d;
 
-    public ThreePizzaDiscountRule(List<Pizza> pizzas) {
-        this.pizzas = pizzas;
-    }
-
-    public Double apply() {
+    @Override
+    public Double apply(List<Pizza> pizzas) {
         if (null == pizzas || pizzas.size() != 3) return ZERO_DISCOUNT;
 
         final List<Pizza> pizzasByPriceAscending =  pizzas.stream()

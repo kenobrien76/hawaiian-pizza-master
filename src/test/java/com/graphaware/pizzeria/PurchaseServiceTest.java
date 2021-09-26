@@ -1,12 +1,14 @@
 package com.graphaware.pizzeria;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.graphaware.pizzeria.core.discount.DiscountService;
 import com.graphaware.pizzeria.model.Pizza;
 import com.graphaware.pizzeria.model.PizzeriaUser;
 import com.graphaware.pizzeria.model.Purchase;
@@ -16,9 +18,9 @@ import com.graphaware.pizzeria.repository.PurchaseRepository;
 import com.graphaware.pizzeria.security.PizzeriaUserPrincipal;
 import com.graphaware.pizzeria.service.PizzeriaException;
 import com.graphaware.pizzeria.service.PurchaseService;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
+
+import java.util.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,18 +41,42 @@ public class PurchaseServiceTest {
     @Mock
     private PurchaseRepository purchaseRepository;
 
+    @Mock
+    private DiscountService discountService;
+
     private PizzeriaUser currentUser;
 
     private PurchaseService purchaseService;
+    private List<Pizza> pizzas;
+
 
     @BeforeEach
     void setUp() {
-        purchaseService = new PurchaseService(purchaseRepository, userRepository);
+        purchaseService = new PurchaseService(purchaseRepository, userRepository, discountService);
         currentUser = new PizzeriaUser();
         currentUser.setName("Papa");
         currentUser.setId(666L);
         currentUser.setRoles(Collections.emptyList());
         currentUser.setEmail("abc@def.com");
+
+        List<String> toppings = new ArrayList<String>() {
+            {
+                add("mushroom");
+            }
+        };
+        Pizza pizza1 = new Pizza();
+        pizza1.setToppings(toppings);
+        pizza1.setPrice(10d);
+        Pizza pizza2 = new Pizza();
+        pizza2.setPrice(10d);
+        pizza2.setToppings(toppings);
+        Pizza pizza3 = new Pizza();
+        pizza3.setPrice(3d);
+        pizza3.setToppings(toppings);
+        pizzas = new ArrayList<>();
+        pizzas.add(pizza1);
+        pizzas.add(pizza2);
+        pizzas.add(pizza3);
 
         Authentication authentication = Mockito.mock(Authentication.class);
         SecurityContext securityContext = Mockito.mock(SecurityContext.class);
@@ -129,6 +155,7 @@ public class PurchaseServiceTest {
     @Test
     void confirm_close_changes_state() {
         Purchase p = new Purchase();
+        p.setPizzas(pizzas);
         p.setState(PurchaseState.ONGOING);
         when(purchaseRepository.findFirstByStateEquals(any()))
                 .thenReturn(p);
@@ -139,8 +166,12 @@ public class PurchaseServiceTest {
         purchaseService.completePurchase(p.getId());
 
         ArgumentCaptor<Purchase> purchaseCaptor = ArgumentCaptor.forClass(Purchase.class);
+        ArgumentCaptor<List<Pizza>> discountCapture = ArgumentCaptor.forClass(List.class);
         verify(purchaseRepository, times(2)).save(purchaseCaptor.capture());
+        verify(discountService, times(1)).determineDiscount(discountCapture.capture());
         Purchase saved = purchaseCaptor.getValue();
         assertThat(saved.getState()).isEqualByComparingTo(PurchaseState.SERVED);
+        List<Pizza> discountPizzas = discountCapture.getValue();
+        assertEquals(pizzas, discountPizzas);
     }
 }

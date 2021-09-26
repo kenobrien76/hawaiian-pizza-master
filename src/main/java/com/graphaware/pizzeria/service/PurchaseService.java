@@ -1,5 +1,6 @@
 package com.graphaware.pizzeria.service;
 
+import com.graphaware.pizzeria.core.discount.DiscountService;
 import com.graphaware.pizzeria.model.Pizza;
 import com.graphaware.pizzeria.model.PizzeriaUser;
 import com.graphaware.pizzeria.model.Purchase;
@@ -27,10 +28,12 @@ public class PurchaseService {
 
     private final PurchaseRepository purchaseRepository;
     private final PizzeriaUserRepository pizzeriaUserRepository;
+    private final DiscountService discountService;
 
-    public PurchaseService(PurchaseRepository purchaseRepository, PizzeriaUserRepository pizzeriaUserRepository) {
+    public PurchaseService(PurchaseRepository purchaseRepository, PizzeriaUserRepository pizzeriaUserRepository, DiscountService discountService) {
         this.purchaseRepository = purchaseRepository;
         this.pizzeriaUserRepository = pizzeriaUserRepository;
+        this.discountService = discountService;
     }
 
     @PreAuthorize("hasAuthority('ADD_PIZZA')")
@@ -132,7 +135,8 @@ public class PurchaseService {
                 }
             }
         }
-        return totalPrice;
+        //TODO pineapple discount rule should also be moved to discount service in the future
+        return totalPrice - discountService.determineDiscount(pizzas);
     }
 
     @PreAuthorize("hasRole('PIZZA_MAKER')")
