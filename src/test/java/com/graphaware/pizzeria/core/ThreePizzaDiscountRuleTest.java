@@ -14,7 +14,7 @@ class ThreePizzaDiscountRuleTest {
     private final Pizza DEAREST = new Pizza();
     private final Pizza MIDDLE = new Pizza();
     private final Pizza CHEAPEST = new Pizza();
-   ;
+
 
     @BeforeEach
     public void setUp() {
@@ -24,7 +24,7 @@ class ThreePizzaDiscountRuleTest {
     }
 
     @Test
-    public void cheapestOfThreePizzasShouldBeFree() {
+    public void cheapestOfThreePizzasShouldBeTheDiscountValue() {
         //Given
         List<Pizza> threePizzas = new ArrayList<Pizza>();
         threePizzas.add(DEAREST);
@@ -34,11 +34,91 @@ class ThreePizzaDiscountRuleTest {
         ThreePizzaDiscountRule threePizzaDiscountRule = new ThreePizzaDiscountRule(threePizzas);
 
         //When
-        Double price = threePizzaDiscountRule.apply();
+        Double discount = threePizzaDiscountRule.apply();
 
         //Then
-        assertEquals(DEAREST.getPrice()+MIDDLE.getPrice(), price);
+        assertEquals(CHEAPEST.getPrice(), discount);
 
     }
 
+    @Test
+    public void shouldBeDiscountZeroForTwoPizzas() {
+        //Given
+        List<Pizza> pizzas = new ArrayList<Pizza>();
+        pizzas.add(DEAREST);
+        pizzas.add(CHEAPEST);
+
+        ThreePizzaDiscountRule threePizzaDiscountRule = new ThreePizzaDiscountRule(pizzas);
+
+        //When
+        Double discount = threePizzaDiscountRule.apply();
+
+        //Then
+        assertEquals(ThreePizzaDiscountRule.ZERO_DISCOUNT, discount);
+
+    }
+
+    @Test
+    public void shouldBeDiscountZeroForEmptyPizzas() {
+        //Given
+        List<Pizza> pizzas = new ArrayList<Pizza>();
+
+        ThreePizzaDiscountRule threePizzaDiscountRule = new ThreePizzaDiscountRule(pizzas);
+
+        //When
+        Double discount = threePizzaDiscountRule.apply();
+
+        //Then
+        assertEquals(ThreePizzaDiscountRule.ZERO_DISCOUNT, discount);
+
+    }
+
+
+    @Test
+    public void shouldBeDiscountZeroForNullPizzas() {
+        //Given
+        List<Pizza> pizzas =  null;
+
+        ThreePizzaDiscountRule threePizzaDiscountRule = new ThreePizzaDiscountRule(pizzas);
+
+        //When
+        Double discount = threePizzaDiscountRule.apply();
+
+        //Then
+        assertEquals(ThreePizzaDiscountRule.ZERO_DISCOUNT, discount);
+
+    }
+
+    @Test
+    public void shouldBeDiscountZeroForNullPizzasPrice() {
+        //Given
+        List<Pizza> pizzas =  null;
+
+        ThreePizzaDiscountRule threePizzaDiscountRule = new ThreePizzaDiscountRule(pizzas);
+
+        //When
+        Double discount = threePizzaDiscountRule.apply();
+
+        //Then
+        assertEquals(ThreePizzaDiscountRule.ZERO_DISCOUNT, discount);
+
+    }
+
+
+    @Test
+    public void assumeShouldNotApplyDiscountForGreaterThanThreePizzas() {
+        //Given
+        List<Pizza> threePizzas = new ArrayList<Pizza>();
+        threePizzas.add(DEAREST);
+        threePizzas.add(CHEAPEST);
+        threePizzas.add(new Pizza());
+
+        ThreePizzaDiscountRule threePizzaDiscountRule = new ThreePizzaDiscountRule(threePizzas);
+
+        //When
+        Double discount = threePizzaDiscountRule.apply();
+
+        //Then
+        assertEquals(ThreePizzaDiscountRule.ZERO_DISCOUNT, discount);
+    }
 }
